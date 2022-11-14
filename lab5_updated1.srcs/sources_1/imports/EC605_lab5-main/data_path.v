@@ -21,58 +21,64 @@
 
 
 module Datapath(
-       input clk,
-       input rst,
+//       input clk,
+//       input rst,
     
-       output  [31:0] Tins,//instruction
-       output  [31:0] Tins_Addr,//Instructions Address
+//       output  [31:0] Tins,//instruction
+//       output  [31:0] Tins_Addr,//Instructions Address
     
-       output  [31:0] TmemReadData,//Read data from memory
-       output  [31:0] TmemAddr,// Data memory Address 
-       output  [31:0] TmemWriteData,// Data wrote to data memory
-       output   TMemWrite, // control signal
-       output   TMemRead, // control signal
+//       output  [31:0] TmemReadData,//Read data from memory
+//       output  [31:0] TmemAddr,// Data memory Address 
+//       output  [31:0] TmemWriteData,// Data wrote to data memory
+//       output   TMemWrite, // control signal
+//       output   TMemRead, // control signal
     
-       output  [31:0] TrReadData1, 
-       output  [31:0] TrReadData2,
-       output  [4:0] TrReadSelect1, 
-       output  [4:0] TrReadSelect2, 
-       output  [4:0] TrWriteSelect, 
-       output  [31:0] TrWriteData, // Data wrote to Register file
-       output  TrWriteEnable// Control singal for Reginster file
-//    clk,rst, 
+//       output  [31:0] TrReadData1, 
+//       output  [31:0] TrReadData2,
+//       output  [4:0] TrReadSelect1, 
+//       output  [4:0] TrReadSelect2, 
+//       output  [4:0] TrWriteSelect, 
+//       output  [31:0] TrWriteData, // Data wrote to Register file
+//       output  TrWriteEnable// Control singal for Reginster file
+    clk,rst, 
 
-//    ins_Addr,
-//     ins,
+    ins_Addr,
+     ins,
 
-//    memAddr,memWriteData,memReadData,MemWrite,MemRead,
+    memAddr,memWriteData,memReadData,MemWrite,MemRead,
 
-//    rReadSelect1,rReadSelect2,rWriteSelect,rWriteData,rWriteEnable,rReadData1,rReadData2
+    rReadSelect1,rReadSelect2,rWriteSelect,rWriteData,rWriteEnable,rReadData1,rReadData2,
+    
+    ALUOp, branch, ALUSrc, MemtoReg, ALU_input2,
+    
+    immediate, flag_zero
+    
     );
     
-//    input clk,rst;
+    input wire clk,rst;
 
-//    //ports for IMEM
-//    input  [31:0] ins;//instruction
-//    output [31:0] ins_Addr;//Instructions Address
+    //ports for IMEM
+    output wire [31:0] ins;//instruction
+    output wire [31:0] ins_Addr;//Instructions Address
+    
+    //ports for Data Memory
+    input wire [31:0] memReadData;//Read data from memory
+    output wire [31:0] memAddr;// Data memory Address 
+    output reg [31:0] memWriteData;// Data wrote to data memory
+    output wire  MemWrite; // control signal
+    output wire  MemRead; // control signal
     
     
-//    //ports for Data Memory
-//    input [31:0] memReadData;//Read data from memory
-//    output [31:0] memAddr;// Data memory Address 
-//    output [31:0] memWriteData;// Data wrote to data memory
-//    output  MemWrite; // control signal
-//    output  MemRead; // control signal
-    
-    
-//    //ports for Register file
-//    input [31:0] rReadData1, rReadData2;
-//    output [4:0] rReadSelect1, rReadSelect2, rWriteSelect; // Control singal for Reginster file
-//    output [31:0] rWriteData; // Data wrote to Register file
-//    output rWriteEnable;// Control singal for Reginster file
+    //ports for Register file
+    input wire [31:0] rReadData1, rReadData2;
+    output wire [4:0] rReadSelect1, rReadSelect2, rWriteSelect; // Control singal for Reginster file
+    output wire [31:0] rWriteData; // Data wrote to Register file
+    output wire rWriteEnable;// Control singal for Reginster file
 
      //variable for pc counter
-    wire [31:0] immediate;
+    output wire [31:0] immediate;
+    output wire flag_zero;
+//    wire [31:0] ins_Addr;//Instructions Address
     
     pc_counter pcc(
         .clk(clk), 
@@ -84,8 +90,7 @@ module Datapath(
     );
     
     //ports for IMEM
-    wire [31:0] ins;//instruction
-    wire [31:0] ins_Addr;//Instructions Address
+//    wire [31:0] ins;//instruction
     
     Instruction_Memory im(
         .Address(ins_Addr),
@@ -93,11 +98,12 @@ module Datapath(
     );
     
     //ports for Data Memory
-    wire [31:0] memReadData;//Read data from memory
-    wire [31:0] memAddr;// Data memory Address 
-    wire [31:0] memWriteData;// Data wrote to data memory
-    wire  MemWrite; // control signal
-    wire  MemRead; // control signal
+//    wire [31:0] memReadData;//Read data from memory
+//    wire [31:0] memAddr;// Data memory Address 
+//    wire [31:0] memWriteData;// Data wrote to data memory
+//    wire  MemWrite; // control signal
+//    wire  MemRead; // control signal
+//    wire [31:0] rReadData2;
     
     DataMemory dm(
         .ReadData(memReadData),//output
@@ -111,13 +117,13 @@ module Datapath(
     
     //ports for Register file
     //control singal for Reginster file
-    wire [31:0] rReadData1; 
-    wire [31:0] rReadData2;
-    wire [4:0] rReadSelect1; 
-    wire [4:0] rReadSelect2; 
-    wire [4:0] rWriteSelect; 
-    wire [31:0] rWriteData; // Data wrote to Register file
-    wire rWriteEnable;// Control singal for Reginster file
+//    wire [31:0] rReadData1; 
+    
+//    wire [4:0] rReadSelect1; 
+//    wire [4:0] rReadSelect2; 
+//    wire [4:0] rWriteSelect; 
+//    wire [31:0] rWriteData; // Data wrote to Register file
+//    wire rWriteEnable;// Control singal for Reginster file
     
     Register_File rf(
         .ReadSelect1(rReadSelect1),//in
@@ -132,10 +138,10 @@ module Datapath(
     );
     
     //variable for control unit
-    wire ALUOp;
-    wire branch;
-    wire ALUSrc;
-    wire MemtoReg;
+    output wire ALUOp;
+    output wire branch;
+    output wire ALUSrc;
+    output wire MemtoReg;
     
     ControlUnit cu(
         .clk(clk), 
@@ -151,8 +157,8 @@ module Datapath(
     );
     
     //variable for alu
-    wire flag_zero;
-    wire [31:0] ALU_input2;
+    
+    output wire [31:0] ALU_input2;
     
     Alu alu(
         .a_data(rReadData1),
@@ -185,27 +191,30 @@ module Datapath(
         .instruction(ins), //in
         .Read_data1(rReadSelect1),//out
         .Read_data2(rReadSelect2),//out
-        .immediate(immediate),
+        .immediate(immediate), //out
         .writeselect(rWriteSelect)
     );
     
-       assign  Tins = ins;//instruction
-       assign  Tins_Addr = ins_Addr;//Instructions Address
+//       assign  Tins = ins;//instruction
+//       assign  Tins_Addr = ins_Addr;//Instructions Address
 
-       assign  TmemReadData = memReadData;//Read data from memory
-       assign  TmemAddr = memAddr; // Data memory Address 
-       assign  TmemWriteData = memWriteData;// Data wrote to data memory
-       assign  TMemWrite = MemWrite; // control signal
-       assign  TMemRead = MemRead; // control signal
+//       assign  TmemReadData = memReadData;//Read data from memory
+//       assign  TmemAddr = memAddr; // Data memory Address 
+//       assign  TmemWriteData = memWriteData;// Data wrote to data memory
+//       assign  TMemWrite = MemWrite; // control signal
+//       assign  TMemRead = MemRead; // control signal
 
-       assign  TrReadData1 = rReadData1;
-       assign  TrReadData2 = rReadData2;
-       assign  TrReadSelect1 = rReadSelect1;
-       assign  TrReadSelect2 = rReadSelect2;
-       assign  TrWriteSelect = rWriteSelect;
-       assign  TrWriteData = rWriteData;// Data wrote to Register file
-       assign  TrWriteEnable = rWriteEnable;// Control singal for Reginster file
-
+//       assign  TrReadData1 = rReadData1;
+//       assign  TrReadData2 = rReadData2;
+//       assign  TrReadSelect1 = rReadSelect1;
+//       assign  TrReadSelect2 = rReadSelect2;
+//       assign  TrWriteSelect = rWriteSelect;
+//       assign  TrWriteData = rWriteData;// Data wrote to Register file
+//       assign  TrWriteEnable = rWriteEnable;// Control singal for Reginster file
+       
+      
+       
+       
 //       assign  TALUOp = ALUOp;
 //       assign  Tbranch = branch;
 //       assign  TALUSrc = ALUSrc;
