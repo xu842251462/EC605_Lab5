@@ -21,16 +21,25 @@
 
 
 module Mem_mux(
-    input [31:0] data,
-    input [31:0] immed,
-    input flag,
-    output reg [31:0] out
-);
 
-    always@(data, immed, flag)begin
-        if (flag==0)
-            out <= data;
-        else
-            out <= immed;
+    instruction, Readdata, ALUoutput, MemtoReg, RegWriteData, rst);
+    
+    input [31:0] instruction;
+    input [31:0] Readdata, ALUoutput;
+    input MemtoReg, rst;
+    
+    output reg [31:0] RegWriteData;
+       
+    always @(posedge rst, MemtoReg, instruction, Readdata, ALUoutput)
+    begin
+        if ( rst )
+            RegWriteData = 0;
+        
+        else if ( rst == 0 && MemtoReg == 1)
+            RegWriteData = Readdata;
+        
+        else if ( rst == 0 && MemtoReg == 0)
+            RegWriteData = ALUoutput;
     end
+    
 endmodule
