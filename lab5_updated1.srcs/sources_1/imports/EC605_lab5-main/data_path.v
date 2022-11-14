@@ -43,7 +43,7 @@ module Datapath(
     clk,rst, 
 
     ins_Addr,
-     ins,
+    ins,
 
     memAddr,memWriteData,memReadData,MemWrite,MemRead,
 
@@ -80,21 +80,38 @@ module Datapath(
     output wire flag_zero;
 //    wire [31:0] ins_Addr;//Instructions Address
     
+    
+    //variable for control unit
+    output wire ALUOp;
+    output wire branch;
+    output wire ALUSrc;
+    output wire MemtoReg;
+    
     pc_counter pcc(
         .clk(clk), 
         .rst(rst), 
-        .zero_flag(flag_zero), 
-        .extended(immediate), 
-        .opcode(ins[6:0]), 
-        .pc(ins_Addr)
+        .zero_flag(flag_zero), //in
+        .branch(branch), //in from control unit
+        .extended(immediate), //in
+        .opcode(ins[6:0]), //in
+        .pc(ins_Addr) //out
     );
     
     //ports for IMEM
 //    wire [31:0] ins;//instruction
     
     Instruction_Memory im(
-        .Address(ins_Addr),
-	    .ReadData1(ins)
+        .Address(ins_Addr),//out to 1. control unit, 2. register file, 3.instruction delivery
+	    .ReadData1(ins)//in from pc
+    );
+    
+    
+    instruction_delivery il(
+        .Read_data1(rReadSelect1),//out
+        .Read_data2(rReadSelect2),//out
+        .immediate(immediate), //out
+        .writeselect(rWriteSelect),
+        .instruction(ins) //in
     );
     
     //ports for Data Memory
@@ -107,10 +124,10 @@ module Datapath(
     
     DataMemory dm(
         .ReadData(memReadData),//output
-        .Address(memAddr),
-        .ReadEnable(MemRead),
-        .WriteData(rReadData2),
-        .WriteEnable(MemWrite),
+        .Address(memAddr), //in from alu output
+        .ReadEnable(MemRead), //in signal from control unit   
+        .WriteEnable(MemWrite), //in signal from control unit 
+        .WriteData(rReadData2), //in from alu mux
         .clk(clk),
         .rst(rst)
     );
@@ -126,34 +143,30 @@ module Datapath(
 //    wire rWriteEnable;// Control singal for Reginster file
     
     Register_File rf(
-        .ReadSelect1(rReadSelect1),//in
-        .ReadSelect2(rReadSelect2),//in
-        .address(rWriteSelect),
-        .WriteData(rWriteData),
-        .WriteEnable(rWriteEnable),
         .ReadData1(rReadData1),//out
-        .ReadData2(rReadData2),//out       
+        .ReadData2(rReadData2),//out  
+        .ReadSelect1(rReadSelect1),//in from instruction delivery
+        .ReadSelect2(rReadSelect2),//in from instruction delivery
+        .address(rWriteSelect), //in 
+        .WriteData(rWriteData), //in from data memory mux
+        .WriteEnable(rWriteEnable), //in  from control unit        
         .clk(clk),
         .rst(rst)
     );
     
-    //variable for control unit
-    output wire ALUOp;
-    output wire branch;
-    output wire ALUSrc;
-    output wire MemtoReg;
     
-    ControlUnit cu(
-        .clk(clk), 
-        .instruction(ins), 
-        .rst(rst), 
-        .ALUOp(ALUOp), 
-        .MemtoReg(MemtoReg), 
-        .Branch(branch), 
-        .MemRead(MemRead), 
-        .MemWrite(MemWrite), 
-        .ALUSrc(ALUSrc), 
-        .RegWrite(rWriteEnable)
+    
+    ControlUnit cu(        
+        .ALUOp(ALUOp), //out
+        .MemtoReg(MemtoReg), //out 
+        .Branch(branch), //out 
+        .MemRead(MemRead), //out 
+        .MemWrite(MemWrite), //out 
+        .ALUSrc(ALUSrc), //out 
+        .RegWrite(rWriteEnable),//out 
+        .clk(clk), //in
+        .instruction(ins), //in 
+        .rst(rst) //in
     );
     
     //variable for alu
@@ -161,39 +174,48 @@ module Datapath(
     output wire [31:0] ALU_input2;
     
     Alu alu(
-        .a_data(rReadData1),
-        .b_data(ALU_input2),
-        .alu_op(ALUOp),
-        .out(memAddr),
-        .zero(flag_zero), //flag
+        .out(memAddr),//out
+        .zero(flag_zero), //out, flag
+        .a_data(rReadData1),//in
+        .b_data(ALU_input2),//in
+        .alu_op(ALUOp),//in       
         .clk(clk),
         .rst(rst)
     );
     
+//    Mem_mux mm(
+//        .out(rWriteData),//out
+//        .data(memReadData),//in
+//        .immed(memAddr),//in
+//        .flag(MemtoReg)//in
+//    );
+    
     Mem_mux mm(
-        .data(memReadData),
-        .immed(memAddr),
-        .flag(MemtoReg),
-        .out(rWriteData)
+        .RegWriteData(rWriteData), //out to register write data
+        .instruction(ins), //in
+        .Readdata(memReadData), //in from data memory output 
+        .ALUoutput(memAddr), //in from alu output
+        .MemtoReg(MemtoReg), //in fron control unit
+        .rst(rst)
     );
     
-    
-    
-    reg_mux rm(
-        .data(rReadData2),
-        .immed(immediate),
-        .flag(ALUSrc),
-        .out(ALU_input2)//out
+    alumux am(
+        .ALU2(ALU_input2),//out to alu
+        .instruction(ins),//in 
+        .data2(rReadData2), //in from register
+        .ALUSrc(ALUSrc),//in from control unit
+        .rst(rst)
     );
+    
+//    reg_mux rm(
+//        .out(ALU_input2),//out
+//        .data(rReadData2),
+//        .immed(immediate),
+//        .flag(ALUSrc)
+//    );
    
     
-    instruction_delivery il(
-        .instruction(ins), //in
-        .Read_data1(rReadSelect1),//out
-        .Read_data2(rReadSelect2),//out
-        .immediate(immediate), //out
-        .writeselect(rWriteSelect)
-    );
+   
     
 //       assign  Tins = ins;//instruction
 //       assign  Tins_Addr = ins_Addr;//Instructions Address
