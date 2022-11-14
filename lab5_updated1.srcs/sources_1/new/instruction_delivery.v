@@ -28,7 +28,7 @@ module instruction_delivery(
     output reg [4:0] writeselect
     );
     
-    inital begin
+    initial begin
         immediate = 32'b0;    
     end
     
@@ -46,20 +46,22 @@ module instruction_delivery(
                     
                 Read_data1 = instruction[19:15];
                 Read_data2 = instruction[24:20];
-                writeselect = 5'b0;
+                writeselect = instruction[11:7];
             end
             
             7'b1100011: begin //sb format
-                if (instruction[14:12] == 3'b000) //beq
+                if (instruction[14:12] == 3'b000) begin //beq
                     immediate[12] = instruction[31];
                     immediate[10:5] = instruction[30:25];
-                else if (instruction[14:12] == 3'b001) //bne
+                end
+                else if (instruction[14:12] == 3'b001) begin //bne
                     immediate[12] = instruction[31];
                     immediate[10:5] = instruction[30:25];
+                end
                     
                 Read_data1 = instruction[19:15];
                 Read_data2 = instruction[24:20];
-                writeselect = 5'b0;
+                writeselect = instruction[11:7];//
             end
             
             7'b0100011: begin // sw, s format
@@ -68,30 +70,29 @@ module instruction_delivery(
                             
                 Read_data1 = instruction[19:15];
                 Read_data2 = instruction[24:20];
-                writeselect = 5'b0;
+                writeselect = instruction[11:7];//
             end
             
            7'b0000011: begin //lw, I format
-           
                 Read_data1 = instruction[19:15];
                 Read_data2 = 5'b0;
                 immediate[11:0] = instruction[31:20];
-                writeselect = 5'b0;
+                writeselect = instruction[11:7];//
             end
             
             
            7'b0110111: begin //lui, u format
                 Read_data1 = 5'b0;
                 Read_data2 = 5'b0;
-                immediate = 64'b0;
-                writeselect = 5'b0;
+                immediate[31:12] = instruction[31:12];
+                writeselect = instruction[11:7];
             end
             
           7'b0010011: begin //addi, i format
                 Read_data1 = instruction[19:15];
                 Read_data2 = 5'b0;
-                immediate[31:12] = instruction[31:12];
-                writeselect = 5'b0;
+                immediate[31:20] = instruction[31:20];
+                writeselect = instruction[11:7];
             end
             
           7'b1101111: begin //jal, uj format
@@ -101,14 +102,14 @@ module instruction_delivery(
                 immediate[10:1] = instruction[30:21];
                 immediate[11] = instruction[20];
                 immediate[19:12] = instruction[19:12];
-                writeselect = 5'b0;
+                writeselect = instruction[11:7];
             end
             
           7'b1101100: begin //mov
                 Read_data1 = instruction[19:15];
                 Read_data2 = 5'b0;
                 immediate = 32'b0;
-                writeselect = 5'b1;
+                writeselect = instruction[11:7];
             end
             
 
